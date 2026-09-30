@@ -7,8 +7,8 @@ Runs Oracle Database 19c Enterprise Edition (19.19) natively on M1/M2/M3/M4 Macs
 You need [OrbStack](https://orbstack.dev) or Docker Desktop, installed and running.
 
 ```bash
-git clone <this repo's URL>
-cd oracle19c
+git clone https://github.com/andreiusq/oracle19c-apple-silicon.git
+cd oracle19c-apple-silicon
 ./start.sh
 ```
 
