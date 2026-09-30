@@ -1,0 +1,22 @@
+# Oracle Database 19c (19.19, ARM64) for Apple Silicon Macs.
+# Requires a one-time `docker login container-registry.oracle.com` — see README.md.
+services:
+  oracle19c:
+    image: container-registry.oracle.com/database/enterprise:19.19.0.0
+    container_name: oracle19c
+    # Bound to 127.0.0.1 so only this Mac can connect, not others on the same Wi-Fi.
+    ports:
+      - "127.0.0.1:1521:1521" # SQL*Net listener
+      - "127.0.0.1:5500:5500" # EM Express (https://localhost:5500/em)
+    environment:
+      ORACLE_SID: ORCLCDB
+      ORACLE_PDB: ORCLPDB1
+      # Min 8 chars with upper, lower and a digit. Override in a .env file.
+      ORACLE_PWD: ${ORACLE_PWD:-Oracle19c}
+      ORACLE_CHARACTERSET: AL32UTF8
+    volumes:
+      - oradata:/opt/oracle/oradata
+    restart: unless-stopped
+
+volumes:
+  oradata:
