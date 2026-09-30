@@ -1,58 +1,55 @@
 # Oracle 19c on Apple Silicon
 
-Runs Oracle Database 19c Enterprise Edition (19.19) natively on M1/M2/M3/M4 Macs, with no emulation. It uses Oracle's official ARM64 image.
+Oracle Database 19c (Enterprise Edition 19.19) for M1/M2/M3/M4 Macs. It runs natively in Docker, with no emulation.
 
-## Quick start
+## Install
 
-You need [OrbStack](https://orbstack.dev) or Docker Desktop, installed and running.
+Open **Terminal** and paste:
 
 ```bash
-git clone https://github.com/andreiusq/oracle19c-apple-silicon.git
-cd oracle19c-apple-silicon
-./start.sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/andreiusq/oracle19c-apple-silicon/main/start.sh)"
 ```
 
-On the first run, the script walks you through a one-time Oracle login. Then it downloads about 3.2 GB and creates the database, which takes about 10 minutes. When it finishes, it prints your connection details. Running it again later just starts the database.
+The script does everything else:
 
-### The one-time Oracle login
+1. **Docker**: installs and starts OrbStack if you don't have Docker yet.
+2. **Oracle signup**: opens Oracle's page and tells you what to click. This is the only manual part and takes about 3 minutes (details below).
+3. **Download and setup**: downloads Oracle 19c (3.2 GB) and creates your database, which takes about 10 minutes.
+4. **Connection details**: prints what to enter in your SQL client when it's done.
 
-Oracle requires everyone to accept its license, so each person needs their own free account. `start.sh` opens the right page and tells you what to do. In summary:
+### Why the Oracle signup?
 
-1. Create a free account at https://profile.oracle.com.
-2. Sign in at https://container-registry.oracle.com, click **Database**, then **enterprise**, and accept the license terms.
-3. Open your username menu (top right), go to **Auth Token**, click **Generate Secret Key**, and copy the key.
-4. When the script asks, enter your Oracle email and paste the **auth token**. Don't use your account password.
+Oracle only gives out 19c to people with a free Oracle account who accept its license. The download link from your professor requires this too. In the page the script opens:
+
+1. Click **Sign In**. If you don't have an account, click **Create Account** on the sign-in page.
+2. On the right, pick a language, click **Continue**, then click **Accept**.
+3. Click your name (top right), go to **Auth Token**, click **Generate Secret Key**, and copy the key. Paste it into Terminal when the script asks.
 
 ## Connect
 
-| Field    | Value                                |
-|----------|--------------------------------------|
-| Host     | `localhost`                          |
-| Port     | `1521`                               |
-| Service  | `ORCLPDB1` (service name, not SID)   |
-| User     | `system` (or `sys` as SYSDBA)        |
-| Password | `Oracle19c` (or your `ORACLE_PWD`)   |
+| Field    | Value                              |
+|----------|------------------------------------|
+| Host     | `localhost`                        |
+| Port     | `1521`                             |
+| Service  | `ORCLPDB1` (service name, not SID) |
+| User     | `system`                           |
+| Password | `Oracle19c`                        |
 
-Clients you can use: SQL Developer (has a macOS ARM build), the Oracle SQL Developer extension for VS Code, or DBeaver.
+You can use SQL Developer (it has a macOS ARM build), the Oracle SQL Developer extension for VS Code, or DBeaver. Only your own Mac can connect, not other devices on the Wi-Fi.
 
-The database only accepts connections from your own Mac, not from other devices on the network.
+## Afterwards
 
-## Everyday commands
+- The database starts on its own whenever OrbStack is running.
+- `docker stop oracle19c` stops it and `docker start oracle19c` starts it again. Your data is kept.
+- You can paste the install command again at any time. It skips anything that's already done.
+- To delete everything: `docker rm -f oracle19c && docker volume rm oracle19c_oradata`
 
-```bash
-./start.sh                 # start (or finish setting up)
-docker compose stop        # stop; your data is kept
-docker compose down -v     # delete the database and all its data
-```
+To use your own password, put `ORACLE_PWD=YourPass123` in front of the install command on the first install:
+`ORACLE_PWD=YourPass123 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/andreiusq/oracle19c-apple-silicon/main/start.sh)"`
 
-To use your own password, create a `.env` file next to `docker-compose.yml` containing `ORACLE_PWD=YourPass123`. Do this before the first run, because the password is only set when the database is created.
+## If something goes wrong
 
-## Troubleshooting
-
-- **`pull access denied` even after `Login Succeeded`**: you haven't accepted the license for the **enterprise** repository yet. Accept it with the same account your token came from, then run `./start.sh` again.
-- **Download stops partway through**: check that OrbStack or Docker Desktop is still running, then run `./start.sh` again. Parts that already finished downloading are reused.
+- **"That email or token didn't work"**: generate a new auth token and paste it in. Don't use your account password.
+- **"Almost there: accept Oracle's license"**: you're signed in but haven't clicked **Accept** yet. Follow the steps it shows.
+- **The download stops partway through**: the script retries automatically. If it still fails, paste the install command again; finished parts are kept.
 - **Anything else**: run `docker logs oracle19c`.
-
-## Why the Oracle image isn't in this repo
-
-Oracle's license lets each person download the software for their own use, but not pass it on to others. The image is also 3.4 GB, well over GitHub's file size limits. This repo only contains the setup, and each person downloads the image from Oracle.
